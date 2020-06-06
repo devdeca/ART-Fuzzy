@@ -1,4 +1,4 @@
-# ARTMAP Fuzzy
+# ART Fuzzy
 
 #### How to execute:
 

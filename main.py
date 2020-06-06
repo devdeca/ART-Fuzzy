@@ -1,12 +1,16 @@
 from numpy import ones, zeros
 
 
-def complement(matrix):
+def complement(line):
+    half = []
+    for el in line:
+        half.append(1 - el)
+    return half
+
+
+def create_complement(matrix):
     for line in matrix:
-        half = []
-        for inp in line:
-            half.append(1 - inp)
-        line.extend(half)
+        line.extend(complement(line))
     return matrix
 
 
@@ -34,7 +38,6 @@ def is_category_valid(line, weights, rho):
     total = 0
     for current, element in enumerate(line):
         total = total + min(element, weights[current])
-
     x = total / sum(line)
     return x >= rho
 
@@ -47,17 +50,47 @@ def get_valid_category(vector, weights, responses, rho):
     return current
 
 
-def get_valid_category_ab(matrix, j, current, inputs):
-
-    while not is_category_valid(matrix[current], wab[current], pba):
-        inputs[j] = 0
-        j = get_valid_category(a[current], wa, inputs, pa)
-    return j
-
-
 def update(matrix, weights, res_pos):
     weights[res_pos] = beta * [min(element, weights[res_pos][pos])for pos, element in enumerate(matrix[res_pos])] \
                             + (1 - beta) * weights[res_pos]
+
+
+# Função para definir se letras estão lado a lado no teclado
+def is_lateral(fchar, schar):
+    for line in KEYBOARD:
+        for pos, char in enumerate(line):
+            if char == fchar:
+                if schar == line[pos - 1] or schar == line[pos + 1]:
+                    return 1
+    return 0
+
+
+# Tratamento das entradas
+def input_words(words, weights, rho):
+    first_length = len(words[0])
+
+    if first_length != len(words[1]):
+        raise Exception('Palavras devem ter o mesmo tamanho!')
+
+    first_input = (first_length - 1) / first_length
+
+    for pos, char in enumerate(words[0]):
+        if char != words[1][pos]:
+            second_input = is_lateral(char.upper(), words[1][pos].upper())
+
+    inputs = [first_input, second_input]
+    inputs.extend(complement(inputs))
+
+    print(f'Teste: {words[0]} vs {words[1]}')
+    print(f'Input 1: {first_input}, Input 2: {second_input}')
+    res = run(inputs, weights)
+    cat = get_valid_category(inputs, weights, res, rho)
+    print(f'Output: {res[cat]}({a[cat]})')
+
+
+KEYBOARD = [['', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', ''],
+            ['', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ''],
+            ['', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '']]
 
 
 a = [
@@ -67,58 +100,39 @@ a = [
     [0, 0],
 ]
 
-b = [
-    [1],
-    [0],
-    [0],
-    [0],
-]
-
-a = complement(a)
-b = complement(b)
+a = create_complement(a)
 
 ya = []
-yb = []
 
-pa = 0.95
-pb = 1
-pba = 0.95
+pa = 0.7
 alpha = 0.1
 beta = 1
 
 wa = ones((len(a), len(a[0])))
-wb = ones((len(b), len(b[0])))
-wab = ones((len(a), len(b)))
 
 for pos in range(len(a)):
     res_a = 0
-    res_b = 0
-
-    # ARTb
-    res_b = run(b[pos], wb)
-    K = get_valid_category(b[pos], wb, res_b, pb)
-    yb.append([0 for _ in b])
-    yb[pos][K] = 1
 
     # ARTa
     res_a = run(a[pos], wa)
     J = get_valid_category(a[pos], wa, res_a, pa)
-    J = get_valid_category_ab(yb, J, pos, res_a)
     ya.append([0 for _ in a])
     ya[pos][J] = 1
 
-    update(b, wb, K)
     update(a, wa, J)
-    wab[J] = [0 for _ in wab[J]]
-    wab[J][K] = 1
 
 print("Training:")
 
 print(wa)
-print(wb)
-print(wab)
 
-test = [0, 0, 1, 1]
-res_c = run(test, wa)
-print(res_c)
-print(get_valid_category(test, wa, res_c, pa))
+# Teste 1: soja vs soka. Entradas resultantes 0,75 e 1.
+input_words(['soja', 'soka'], wa, pa)
+
+# Teste 2: soja vs soda
+input_words(['soja', 'soda'], wa, pa)
+
+# Teste 3: pneumoultramicroscopicossilicovulcanoconiotico vs pneumoultramicroscopicossilicovulcanoconioticp
+input_words(['pneumoultramicroscopicossilicovulcanoconiotico', 'pneumoultramicroscopicossilicovulcanoconioticp'], wa, pa)
+
+# Teste 4: james vs jimes
+input_words(['james', 'jsmes'], wa, pa)
