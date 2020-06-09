@@ -1,4 +1,4 @@
-from numpy import ones, zeros
+from numpy import ones
 
 
 def complement(line):
@@ -85,7 +85,7 @@ def input_words(words, weights, rho):
     print(f'Input 1: {first_input}, Input 2: {second_input}')
     res = run(inputs, weights)
     cat = get_valid_category(inputs, weights, res, rho)
-    print(f'Output: {res[cat]}({a[cat]})')
+    print(f'Output: {res[cat]}({data[cat]})')
 
 
 KEYBOARD = [['', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', ''],
@@ -93,14 +93,10 @@ KEYBOARD = [['', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', ''],
             ['', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '']]
 
 
-a = [
-    [1, 1],
-    [0, 1],
-    [1, 0],
-    [0, 0],
-]
+data = [[1, 1],
+        [0.3, 0]]
 
-a = create_complement(a)
+data = create_complement(data)
 
 ya = []
 
@@ -108,18 +104,18 @@ pa = 0.7
 alpha = 0.1
 beta = 1
 
-wa = ones((len(a), len(a[0])))
+wa = ones((len(data), len(data[0])))
 
-for pos in range(len(a)):
+for pos in range(len(data)):
     res_a = 0
 
     # ARTa
-    res_a = run(a[pos], wa)
-    J = get_valid_category(a[pos], wa, res_a, pa)
-    ya.append([0 for _ in a])
+    res_a = run(data[pos], wa)
+    J = get_valid_category(data[pos], wa, res_a, pa)
+    ya.append([0 for _ in data])
     ya[pos][J] = 1
 
-    update(a, wa, J)
+    update(data, wa, J)
 
 print("Training:")
 
